@@ -1,10 +1,11 @@
-mt = new MersenneTwister(5853192983);
+mt = new MersenneTwister(5853192986);
 
 var noiseLevel = function(zoom) {
     var zoom = zoom || 1;
-    var offset = mt.nextInt();
+    var ox = mt.nextInt();
+    var oy = mt.nextInt();
     return function(x, y) {
-        return PerlinNoise.noise((x+offset)/zoom, (y+offset)/zoom, .5);
+        return PerlinNoise.noise((x+ox)/zoom, (y+oy)/zoom, .5);
     }
 }
 
@@ -17,13 +18,13 @@ var main = function() {
     canvas.height = height * tilesize;
     var context = canvas.getContext("2d");
 
-    var low = noiseLevel(15);
+    var low = noiseLevel(25);
     var mid = noiseLevel(5);
     var high = noiseLevel(3);
 
     for (var x=0; x < width; x++) {
         for (var y=0; y < height; y++) {
-            var n = low(x,y) + high(x,y) * .2;
+            var n = low(x,y) + high(x,y) * .1;
             var n2 = mid(x,y);
             var n3 = high(x,y);
             if (n < .6) { // ocean
