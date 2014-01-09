@@ -10,9 +10,9 @@ var createPlayer = require("voxel-player")(game);
 
 var player = createPlayer('shama.png');
 player.possess();
-player.yaw.position.set(0, 100, 0);
+player.yaw.position.set(0, 5, 0);
 
-/*var snow = require('voxel-snow')({
+var snow = require('voxel-snow')({
   // pass it a copy of the game
   game: game,
   // how many particles of snow
@@ -30,4 +30,4 @@ player.yaw.position.set(0, 100, 0);
 game.on('tick', function() {
   // update the snow by calling tick
   snow.tick();
-});*/
+});
