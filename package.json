@@ -1,0 +1,26 @@
+{
+  "name": "perlin-potential-spice",
+  "version": "0.0.0",
+  "description": "perlin-potential-spice ======================",
+  "main": "index.js",
+  "scripts": {
+    "start": "echo \"open localhost:8080/\" && ./node_modules/.bin/browservefy index.js 8080 -- -d",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mrooney/perlin-potential-spice.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mrooney/perlin-potential-spice/issues"
+  },
+  "homepage": "https://github.com/mrooney/perlin-potential-spice",
+  "devDependencies": {
+    "voxel-engine": "~0.20.0",
+    "voxel-player": "~0.1.0",
+    "browservefy": "0.0.10",
+    "voxel-snow": "~0.2.0"
+  }
+}
