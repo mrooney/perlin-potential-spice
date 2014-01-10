@@ -87,10 +87,8 @@ var main_gl = function() {
 
     function renderChunk(cx, cy) {
         console.log('rendering chunk ' + cx + ',' + cy);
-        //var merged = new THREE.Geometry();
-        //var materials = [];
+        var merged = new THREE.Geometry();
         for (var x=0; x < cs; x++) {
-
             for (var y=0; y < cs; y++) {
                 var z = 0;
                 var px = cx * chunkspan + x * bs
@@ -114,17 +112,11 @@ var main_gl = function() {
                     materialCache[style] = new THREE.MeshBasicMaterial( { color: style } );
                 }
                 material = materialCache[style];
-                //materials.push(material);
                 mesh = new THREE.Mesh(geometry, material);
                 mesh.position.set(px, py, 0);
-                //THREE.GeometryUtils.merge( merged, mesh );
                 scene.add(mesh);
             }
         }
-        /*var mesh = new THREE.Mesh( merged, new THREE.MeshFaceMaterial( materials ) );
-        mesh.geometry.computeFaceNormals();
-        mesh.geometry.computeVertexNormals();
-        scene.add( mesh );*/
     }
 
     function generateNewChunks() {
