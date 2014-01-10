@@ -58,7 +58,9 @@ var main_gl = function() {
     var chunkspan = bs * cs;
     var chunks = {};
     var materials = {};
-    geometry = new THREE.PlaneGeometry( bs, bs ); // or Three.CubeGeometry
+    geometry = new THREE.PlaneGeometry( bs, bs );
+    //geometry = new THREE.CubeGeometry( bs, bs, bs );
+    var materialCache = {};
 
     init();
     animate();
@@ -85,8 +87,12 @@ var main_gl = function() {
 
     function renderChunk(cx, cy) {
         console.log('rendering chunk ' + cx + ',' + cy);
+        //var merged = new THREE.Geometry();
+        //var materials = [];
         for (var x=0; x < cs; x++) {
+
             for (var y=0; y < cs; y++) {
+                var z = 0;
                 var px = cx * chunkspan + x * bs
                 var py = cy * chunkspan + y * bs
                 var n = low(px/bs,py/bs) + high(px/bs,py/bs) * .1;
@@ -98,19 +104,27 @@ var main_gl = function() {
                 } else if (n < .7) { // sand
                     style = 0xfef0c9;
                     if (n3 > .85) { style = 0x808080; }
+                    z = bs;
                 } else { // grass
                     style = 0x32cd32;
                     if (n2 > .7) { style = 0x458B00; }
+                    z = 2 * bs;
                 }
-                if (!materials[style]) {
-                    materials[style] = new THREE.MeshBasicMaterial( { color: style, wireframe: false } );
+                if (!materialCache[style]) {
+                    materialCache[style] = new THREE.MeshBasicMaterial( { color: style } );
                 }
-                material = materials[style];
-                mesh = new THREE.Mesh( geometry, material );
+                material = materialCache[style];
+                //materials.push(material);
+                mesh = new THREE.Mesh(geometry, material);
                 mesh.position.set(px, py, 0);
-                scene.add( mesh );
+                //THREE.GeometryUtils.merge( merged, mesh );
+                scene.add(mesh);
             }
         }
+        /*var mesh = new THREE.Mesh( merged, new THREE.MeshFaceMaterial( materials ) );
+        mesh.geometry.computeFaceNormals();
+        mesh.geometry.computeVertexNormals();
+        scene.add( mesh );*/
     }
 
     function generateNewChunks() {
