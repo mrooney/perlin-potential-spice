@@ -20,7 +20,6 @@
   "devDependencies": {
     "voxel-engine": "~0.20.0",
     "voxel-player": "~0.1.0",
-    "browservefy": "0.0.10",
-    "voxel-snow": "~0.2.0"
+    "browservefy": "0.0.10"
   }
 }

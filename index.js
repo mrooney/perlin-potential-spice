@@ -12,7 +12,33 @@ var player = createPlayer('shama.png');
 player.possess();
 player.yaw.position.set(0, 5, 0);
 
-var snow = require('voxel-snow')({
+//var terrain = require('voxel-perlin-terrain');
+//var chunkSize = 32
+// initialize your noise with a seed, floor height, ceiling height and scale factor
+// var generateChunk = terrain('foo', 0, 5, 20)
+// then hook it up to your game as such:
+/*game.voxels.on('missingChunk', function(p) {
+    console.log(p);
+    var low = p;
+    var high = [p[0]+chunkSize, p[1]+chunkSize, p[2]+chunkSize];
+    var chunk = require('voxel').generate(low, high, function(x,y,z) {
+        return Math.round(Math.random() * 0xffffff);
+    });
+    chunk.position = p;
+    var voxels = generateChunk(p, chunkSize)
+    var chunk = {
+        position: p,
+        dims: [chunkSize, chunkSize, chunkSize],
+        voxels: voxels
+    }
+    console.log(chunk)
+    game.showChunk(chunk)
+});*/
+/*require('voxel').generate([0,0,0], [16,16,16], function(x,y,z) {
+  return Math.round(Math.random() * 0xffffff)
+})*/
+
+/*var snow = require('voxel-snow')({
   // pass it a copy of the game
   game: game,
   // how many particles of snow
@@ -30,4 +56,4 @@ var snow = require('voxel-snow')({
 game.on('tick', function() {
   // update the snow by calling tick
   snow.tick();
-});
+});*/
