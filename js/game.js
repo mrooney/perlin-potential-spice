@@ -87,7 +87,6 @@ var main_gl = function() {
 
     function renderChunk(cx, cy) {
         console.log('rendering chunk ' + cx + ',' + cy);
-        var merged = new THREE.Geometry();
         for (var x=0; x < cs; x++) {
             for (var y=0; y < cs; y++) {
                 var z = 0;
