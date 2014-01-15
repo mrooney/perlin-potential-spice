@@ -105,6 +105,7 @@ var main = function() {
                 chunk_cache[chunk_key] = renderChunk.apply(null, indices);
             }
             chunkdata = chunk_cache[chunk_key];
+            // TODO: drawImage can take an Image element, so we can cache that instead and skip the bctx here.
             bctx.putImageData(chunkdata, 0, 0);
             ctx.drawImage(buffer, indices[0]*chunkspan, indices[1]*chunkspan);
         });
