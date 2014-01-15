@@ -62,12 +62,13 @@ var main = function() {
         chunk_cache[key] = e.data.imgData;
     }
 
-    function getVisibleChunks() {
-        var topleftcx = Math.floor(state.x / chunkspan);
-        var topleftcy = Math.floor(state.y / chunkspan);
+    function getVisibleChunks(offset) {
+        offset = offset || 0;
+        var topleftcx = Math.floor(state.x / chunkspan) - offset;
+        var topleftcy = Math.floor(state.y / chunkspan) - offset;
         var visible = [];
-        for (var x=0; x < xchunks; x++) {
-            for (var y=0; y < xchunks; y++) {
+        for (var x=0; x < (xchunks+offset*2); x++) {
+            for (var y=0; y < (xchunks+offset*2); y++) {
                 visible.push([topleftcx+x, topleftcy+y]);
             }
         }
@@ -76,13 +77,17 @@ var main = function() {
 
     function renderChunks() {
         var visible = getVisibleChunks();
+        var nearby = getVisibleChunks(1);
+        // Generate any nearby chunks.
         $.each(visible, function(i, chunk_key) {
-            // If the chunk isn't cached, generate it.
             if (chunk_queue[chunk_key] === undefined) {
-                console.log("hit ", chunk_key);
+                console.log("generating ", chunk_key);
                 chunk_queue[chunk_key] = true;
                 renderChunk(chunk_key[0], chunk_key[1]);
             }
+        });
+        // Render any visible ones.
+        $.each(visible, function(i, chunk_key) {
             chunkdata = chunk_cache[chunk_key];
             if (chunkdata) {
                 // TODO: drawImage can take an Image element, so we can cache that instead and skip the bctx here.

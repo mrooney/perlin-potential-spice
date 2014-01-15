@@ -1,18 +1,3 @@
-function hexToRgb(hex) {
-    // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
-    var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-    hex = hex.replace(shorthandRegex, function(m, r, g, b) {
-        return r + r + g + g + b + b;
-    });
-
-    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-    } : null;
-}
-
 importScripts("mt.js", "perlin.js");
 
 mt = new MersenneTwister(5853192986);
@@ -38,11 +23,10 @@ onmessage = function(e) {
     var imgData = e.data.imgData;
 
     var chunkSpan = chunkSize * tileSize;
-    console.log("data: " + chunkSize + " " + tileSize + " " + chunkSpan);
-
     var chunkStyles = {};
-
     var x, y, style, rx, ry, n, n2, n3, rgb, offset, cindex;
+
+    var start = new Date().getTime();
 
     for (x=0; x < chunkSize; x++) {
         for (y=0; y < chunkSize; y++) {
@@ -51,16 +35,16 @@ onmessage = function(e) {
             n = low(rx,ry) + high(rx,ry) * .1;
             n2 = mid(rx,ry);
             n3 = high(rx,ry);
-            style = "#ff0000";
+            style = [255, 0, 0];
             if (n < .6) { // ocean
-                style = "#0000ff";
-                if (n2 > .6) { style = "#6495ed"; }
+                style = [0, 0, 255];
+                if (n2 > .6) { style = [100, 149, 237]; }
             } else if (n < .7) { // sand
-                style = "#fef0c9";
+                style = [254, 240, 201];
                 //if (n2 > .75) { style = '#D2691E'; }
             } else { // grass
-                style = "#32cd32";
-                if (n3 > .7) { style = "#999999"; }
+                style = [50, 205, 50];
+                if (n3 > .7) { style = [153, 153, 153]; }
             }
             chunkStyles[[x, y]] = style;
         }
@@ -70,14 +54,15 @@ onmessage = function(e) {
         for (x = 0; x < chunkSpan; x++) {
             offset = (y * chunkSpan + x) * 4;
             cindex = [Math.floor(x/tileSize), Math.floor(y/tileSize)];
-            style = chunkStyles[cindex];
-            rgb = hexToRgb(style);
-            imgData.data[offset] = rgb.r;
-            imgData.data[offset + 1] = rgb.g;
-            imgData.data[offset + 2] = rgb.b;
+            rgb = chunkStyles[cindex];
+            imgData.data[offset] = rgb[0];
+            imgData.data[offset + 1] = rgb[1];
+            imgData.data[offset + 2] = rgb[2];
             imgData.data[offset + 3] = 255;
         }
     }
+
+    console.log("Generated chunk in " + (new Date().getTime() - start));
 
     postMessage({cx: cx, cy: cy, imgData: imgData});
 }
