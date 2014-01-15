@@ -39,6 +39,11 @@ var main = function() {
             var key = String.fromCharCode(keyCode);
             state.pressed[key] = false;
         }
+
+        var fpsOut = document.getElementById('fps');
+        setInterval(function(){
+          fpsOut.innerHTML = (1000/frameTime).toFixed(1) + " fps";
+        },1000);
     }
 
     var imgdata;
@@ -77,13 +82,16 @@ var main = function() {
 
     function renderChunks() {
         var visible = getVisibleChunks();
+        var nearby = getVisibleChunks(1);
         // Generate any nearby chunks.
-        $.each(visible, function(i, chunk_key) {
+        $.each(nearby, function(i, chunk_key) {
             if (chunk_queue[chunk_key] === undefined) {
                 console.log("generating ", chunk_key);
                 chunk_queue[chunk_key] = true;
                 renderChunk(chunk_key[0], chunk_key[1]);
             }
+        });
+        $.each(visible, function(i, chunk_key) {
             chunkdata = chunk_cache[chunk_key];
             if (chunkdata) {
                 // TODO: drawImage can take an Image element, so we can cache that instead and skip the bctx here.
@@ -111,6 +119,11 @@ var main = function() {
     }
 
     var last = null;
+    // The higher this value, the less the fps will reflect temporary variations
+    // A value of 1 will only keep the last value
+    var filterStrength = 20;
+    var frameTime = 0, lastLoop = new Date, thisLoop;
+
     function animate(timestamp) {
         var delta = 0;
         if (last !== null) {
@@ -123,9 +136,15 @@ var main = function() {
         render(delta);
         ctx.restore();
         last = timestamp;
+        var thisFrameTime = (thisLoop=new Date) - lastLoop;
+        frameTime+= (thisFrameTime - frameTime) / filterStrength;
+        lastLoop = thisLoop;
     }
 
     init();
     requestAnimationFrame(animate);
 }
 main();
+function gameLoop(){
+}
+
