@@ -1,14 +1,3 @@
-mt = new MersenneTwister(5853192986);
-
-var noiseLevel = function(zoom) {
-    var zoom = zoom || 1;
-    var ox = mt.nextInt();
-    var oy = mt.nextInt();
-    return function(x, y) {
-        return PerlinNoise.noise((x+ox)/zoom, (y+oy)/zoom, .5);
-    }
-}
-
 var main = function() {
     var height = 80;
     var width = 150;
@@ -18,9 +7,11 @@ var main = function() {
     canvas.height = height * tilesize;
     var ctx = canvas.getContext("2d");
 
-    var chunkspan = tilesize * 75;
+    var chunksize = 75;
+    var chunkspan = tilesize * chunksize;
     var xchunks = Math.ceil(canvas.width / chunkspan);
     var ychunks = Math.ceil(canvas.height / chunkspan);
+    var chunk_queue = {};
     var chunk_cache = {};
 
     var buffer = document.createElement("canvas");
@@ -28,15 +19,13 @@ var main = function() {
     buffer.height = height * tilesize;
     var bctx = buffer.getContext("2d");
 
-    var low = noiseLevel(25);
-    var mid = noiseLevel(5);
-    var high = noiseLevel(3);
-
     var state = {
         x: 0,
         y: 0,
         pressed: {},
     }
+
+    var wrkr = new Worker('js/worker.js');
 
     function init() {
         document.onkeydown = function(e) {
@@ -58,30 +47,21 @@ var main = function() {
     }
 
     function renderChunk(cx, cy) {
-        for (var x=0; x < width; x++) {
-            for (var y=0; y < height; y++) {
-                var rx = cx * chunkspan / tilesize + x;
-                var ry = cy * chunkspan / tilesize + y;
-                var n = low(rx,ry) + high(rx,ry) * .1;
-                var n2 = mid(rx,ry);
-                var n3 = high(rx,ry);
-                if (n < .6) { // ocean
-                    style = 'blue';
-                    if (n2 > .6) { style = '#6495ED'; }
-                } else if (n < .7) { // sand
-                    style = '#FEF0C9';
-                    //if (n2 > .75) { style = '#D2691E'; }
-                } else { // grass
-                    style = '#32CD32';
-                    if (n3 > .7) { style = 'gray'; }
-                }
-                bctx.fillStyle = style;
-                bctx.fillRect(x*tilesize, y*tilesize, tilesize, tilesize);
-            }
+        var message = {
+            chunkSize: chunksize,
+            tileSize: tilesize,
+            cx: cx,
+            cy: cy,
+            imgData: bctx.getImageData(0, 0, chunkspan, chunkspan),
         }
-        return bctx.getImageData(0, 0, width*tilesize, height*tilesize);
+        wrkr.postMessage(message);
     }
-    
+
+    wrkr.onmessage = function(e) {
+        var key = ""+e.data.cx+","+e.data.cy;
+        chunk_cache[key] = e.data.imgData;
+    }
+
     function getVisibleChunks() {
         var topleftcx = Math.floor(state.x / chunkspan);
         var topleftcy = Math.floor(state.y / chunkspan);
@@ -100,14 +80,17 @@ var main = function() {
         $.each(visible, function(i, chunk_key) {
             // If the chunk isn't cached, generate it.
             indices = $.map(chunk_key.split(","), function(x) { return parseInt(x); })
-            if (chunk_cache[chunk_key] === undefined) {
+            if (chunk_queue[chunk_key] === undefined) {
                 console.log("hit ", chunk_key);
-                chunk_cache[chunk_key] = renderChunk.apply(null, indices);
+                chunk_queue[chunk_key] = true;
+                renderChunk.apply(null, indices);
             }
             chunkdata = chunk_cache[chunk_key];
-            // TODO: drawImage can take an Image element, so we can cache that instead and skip the bctx here.
-            bctx.putImageData(chunkdata, 0, 0);
-            ctx.drawImage(buffer, indices[0]*chunkspan, indices[1]*chunkspan);
+            if (chunkdata) {
+                // TODO: drawImage can take an Image element, so we can cache that instead and skip the bctx here.
+                bctx.putImageData(chunkdata, 0, 0);
+                ctx.drawImage(buffer, indices[0]*chunkspan, indices[1]*chunkspan);
+            }
         });
     }
 
