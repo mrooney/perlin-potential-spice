@@ -121,7 +121,7 @@ var main = function() {
     var last = null;
     // The higher this value, the less the fps will reflect temporary variations
     // A value of 1 will only keep the last value
-    var filterStrength = 20;
+    var filterStrength = 10;
     var frameTime = 0, lastLoop = new Date, thisLoop;
 
     function animate(timestamp) {
