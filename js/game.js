@@ -18,15 +18,22 @@ var main = function() {
     canvas.height = height * tilesize;
     var ctx = canvas.getContext("2d");
 
+    var csx = canvas.width;
+    var csy = canvas.height;
+    var chunk_cache = {};
+
     var buffer = document.createElement("canvas");
     buffer.width = width * tilesize;
     buffer.height = height * tilesize;
+    var bctx = buffer.getContext("2d");
 
     var low = noiseLevel(25);
     var mid = noiseLevel(5);
     var high = noiseLevel(3);
 
     var state = {
+        x: 0,
+        y: 0,
         pressed: {},
     }
 
@@ -45,18 +52,18 @@ var main = function() {
     }
 
     var imgdata;
-    renderChunk();
     function render(delta) {
-        ctx.drawImage(buffer, 0, 0);
+        renderChunks();
     }
 
     function renderChunk(cx, cy) {
-        var ctx = buffer.getContext("2d");
         for (var x=0; x < width; x++) {
             for (var y=0; y < height; y++) {
-                var n = low(x,y) + high(x,y) * .1;
-                var n2 = mid(x,y);
-                var n3 = high(x,y);
+                var rx = cx * csx / tilesize + x;
+                var ry = cy * csy / tilesize + y;
+                var n = low(rx,ry) + high(rx,ry) * .1;
+                var n2 = mid(rx,ry);
+                var n3 = high(rx,ry);
                 if (n < .6) { // ocean
                     style = 'blue';
                     if (n2 > .6) { style = '#6495ED'; }
@@ -67,26 +74,57 @@ var main = function() {
                     style = '#32CD32';
                     if (n3 > .7) { style = 'gray'; }
                 }
-                //var style = "rgb(" + n + "," + n + "," + n + ")";
-                ctx.fillStyle = style;
-                ctx.fillRect(x*tilesize, y*tilesize, tilesize, tilesize);
+                bctx.fillStyle = style;
+                bctx.fillRect(x*tilesize, y*tilesize, tilesize, tilesize);
             }
         }
-        imgdata = ctx.getImageData(0, 0, width*tilesize, height*tilesize);
+        return bctx.getImageData(0, 0, width*tilesize, height*tilesize);
     }
     
+    function getVisibleChunks() {
+        var topleftcx = Math.floor(state.x / csx);
+        var topleftcy = Math.floor(state.y / csy);
+        var visible = [];
+        visible.push(""+topleftcx+","+topleftcy);
+        visible.push(""+(topleftcx+1)+","+topleftcy);
+        visible.push(""+topleftcx+","+(topleftcy+1));
+        visible.push(""+(topleftcx+1)+","+(topleftcy+1));
+        return visible;
+    }
+
+    function renderChunks() {
+        var visible = getVisibleChunks();
+        console.log(visible);
+        var indices;
+        $.each(visible, function(i, chunk_key) {
+            // If the chunk isn't cached, generate it.
+            indices = $.map(chunk_key.split(","), function(x) { return parseInt(x); })
+            if (chunk_cache[chunk_key] === undefined) {
+                console.log("hit ", chunk_key);
+                chunk_cache[chunk_key] = renderChunk.apply(null, indices);
+            }
+            chunkdata = chunk_cache[chunk_key];
+            bctx.putImageData(chunkdata, 0, 0);
+            ctx.drawImage(buffer, (i%2)*csx, Math.floor(i/2)*csy);
+        });
+    }
+
     function update(delta) {
         if (state.pressed["W"] === true) {
             ctx.translate(0, 1);
+            state.y -= 1;
         }
         if (state.pressed["S"] === true) {
             ctx.translate(0, -1);
+            state.y += 1;
         }
         if (state.pressed["A"] === true) {
             ctx.translate(1, 0);
+            state.x -= 1;
         }
         if (state.pressed["D"] === true) {
             ctx.translate(-1, 0);
+            state.x += 1;
         }
     }
 
