@@ -94,7 +94,7 @@ var main = function() {
         $.each(visible, function(i, chunk_key) {
             chunkdata = chunk_cache[chunk_key];
             if (chunkdata) {
-                // TODO: drawImage can take an Image element, so we can cache that instead and skip the bctx here.
+                // TODO: drawImage can take an Image element, so we can cache that instead and skip the expensive bctx.putImageData here.
                 // http://stackoverflow.com/questions/923885/capture-html-canvas-as-gif-jpg-png-pdf/
                 bctx.putImageData(chunkdata, 0, 0);
                 ctx.drawImage(buffer, chunk_key[0]*chunkspan, chunk_key[1]*chunkspan);
