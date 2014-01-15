@@ -23,7 +23,7 @@ onmessage = function(e) {
     var imgData = e.data.imgData;
 
     var chunkSpan = chunkSize * tileSize;
-    var chunkStyles = {};
+    var chunkStyles = new Array(chunkSize*chunkSize);
     var x, y, style, rx, ry, n, n2, n3, rgb, offset, cindex;
 
     var start = new Date().getTime();
@@ -46,19 +46,21 @@ onmessage = function(e) {
                 style = [50, 205, 50];
                 if (n3 > .7) { style = [153, 153, 153]; }
             }
-            chunkStyles[[x, y]] = style;
+            chunkStyles[y*chunkSize+x] = style;
         }
     }
+
+
+    var data = imgData.data;
 
     for (y = 0; y < chunkSpan; y++) {
         for (x = 0; x < chunkSpan; x++) {
             offset = (y * chunkSpan + x) * 4;
-            cindex = [Math.floor(x/tileSize), Math.floor(y/tileSize)];
-            rgb = chunkStyles[cindex];
-            imgData.data[offset] = rgb[0];
-            imgData.data[offset + 1] = rgb[1];
-            imgData.data[offset + 2] = rgb[2];
-            imgData.data[offset + 3] = 255;
+            rgb = chunkStyles[Math.floor(y/tileSize) * chunkSize + Math.floor(x/tileSize)];
+            data[offset] = rgb[0];
+            data[offset + 1] = rgb[1];
+            data[offset + 2] = rgb[2];
+            data[offset + 3] = 255;
         }
     }
 
