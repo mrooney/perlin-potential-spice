@@ -18,8 +18,9 @@ var main = function() {
     canvas.height = height * tilesize;
     var ctx = canvas.getContext("2d");
 
-    var csx = canvas.width;
-    var csy = canvas.height;
+    var chunkspan = tilesize * 75;
+    var xchunks = Math.ceil(canvas.width / chunkspan);
+    var ychunks = Math.ceil(canvas.height / chunkspan);
     var chunk_cache = {};
 
     var buffer = document.createElement("canvas");
@@ -59,8 +60,8 @@ var main = function() {
     function renderChunk(cx, cy) {
         for (var x=0; x < width; x++) {
             for (var y=0; y < height; y++) {
-                var rx = cx * csx / tilesize + x;
-                var ry = cy * csy / tilesize + y;
+                var rx = cx * chunkspan / tilesize + x;
+                var ry = cy * chunkspan / tilesize + y;
                 var n = low(rx,ry) + high(rx,ry) * .1;
                 var n2 = mid(rx,ry);
                 var n3 = high(rx,ry);
@@ -82,13 +83,14 @@ var main = function() {
     }
     
     function getVisibleChunks() {
-        var topleftcx = Math.floor(state.x / csx);
-        var topleftcy = Math.floor(state.y / csy);
+        var topleftcx = Math.floor(state.x / chunkspan);
+        var topleftcy = Math.floor(state.y / chunkspan);
         var visible = [];
-        visible.push(""+topleftcx+","+topleftcy);
-        visible.push(""+(topleftcx+1)+","+topleftcy);
-        visible.push(""+topleftcx+","+(topleftcy+1));
-        visible.push(""+(topleftcx+1)+","+(topleftcy+1));
+        for (var x=0; x < xchunks; x++) {
+            for (var y=0; y < xchunks; y++) {
+                visible.push(""+(topleftcx+x)+","+(topleftcy+y));
+            }
+        }
         return visible;
     }
 
@@ -104,7 +106,7 @@ var main = function() {
             }
             chunkdata = chunk_cache[chunk_key];
             bctx.putImageData(chunkdata, 0, 0);
-            ctx.drawImage(buffer, indices[0]*csx, indices[1]*csy);
+            ctx.drawImage(buffer, indices[0]*chunkspan, indices[1]*chunkspan);
         });
     }
 
