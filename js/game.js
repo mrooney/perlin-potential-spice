@@ -94,8 +94,11 @@ var main = function() {
 
     function renderChunks() {
         var visible = getVisibleChunks();
-        console.log(visible);
         var indices;
+        var dx;
+        var dy;
+        var oddx = null;
+        var oddy = null;
         $.each(visible, function(i, chunk_key) {
             // If the chunk isn't cached, generate it.
             indices = $.map(chunk_key.split(","), function(x) { return parseInt(x); })
@@ -103,29 +106,31 @@ var main = function() {
                 console.log("hit ", chunk_key);
                 chunk_cache[chunk_key] = renderChunk.apply(null, indices);
             }
+            if (oddx === null) { oddx = Math.abs(indices[0] % 2); }
+            if (oddy === null) { oddy = Math.abs(indices[1] % 2); }
             chunkdata = chunk_cache[chunk_key];
             bctx.putImageData(chunkdata, 0, 0);
-            ctx.drawImage(buffer, (i%2)*csx, Math.floor(i/2)*csy);
+            var dx = (i%2)*csx - oddx * csx;
+            var dy = Math.floor(i/2)*csy - oddy * csy;
+            ctx.drawImage(buffer, dx, dy);
         });
     }
 
     function update(delta) {
+        var scrollmult = 3;
         if (state.pressed["W"] === true) {
-            ctx.translate(0, 1);
-            state.y -= 1;
+            state.y -= scrollmult;
         }
         if (state.pressed["S"] === true) {
-            ctx.translate(0, -1);
-            state.y += 1;
+            state.y += scrollmult;
         }
         if (state.pressed["A"] === true) {
-            ctx.translate(1, 0);
-            state.x -= 1;
+            state.x -= scrollmult;
         }
         if (state.pressed["D"] === true) {
-            ctx.translate(-1, 0);
-            state.x += 1;
+            state.x += scrollmult;
         }
+        ctx.translate(-(state.x%csx), -(state.y%csy));
     }
 
     var last = null;
@@ -136,8 +141,10 @@ var main = function() {
         }
         requestAnimationFrame(animate);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
         update(delta);
         render(delta);
+        ctx.restore();
         last = timestamp;
     }
 
