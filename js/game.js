@@ -68,7 +68,7 @@ var main = function() {
         var visible = [];
         for (var x=0; x < xchunks; x++) {
             for (var y=0; y < xchunks; y++) {
-                visible.push(""+(topleftcx+x)+","+(topleftcy+y));
+                visible.push([topleftcx+x, topleftcy+y]);
             }
         }
         return visible;
@@ -76,20 +76,18 @@ var main = function() {
 
     function renderChunks() {
         var visible = getVisibleChunks();
-        var indices;
         $.each(visible, function(i, chunk_key) {
             // If the chunk isn't cached, generate it.
-            indices = $.map(chunk_key.split(","), function(x) { return parseInt(x); })
             if (chunk_queue[chunk_key] === undefined) {
                 console.log("hit ", chunk_key);
                 chunk_queue[chunk_key] = true;
-                renderChunk.apply(null, indices);
+                renderChunk(chunk_key[0], chunk_key[1]);
             }
             chunkdata = chunk_cache[chunk_key];
             if (chunkdata) {
                 // TODO: drawImage can take an Image element, so we can cache that instead and skip the bctx here.
                 bctx.putImageData(chunkdata, 0, 0);
-                ctx.drawImage(buffer, indices[0]*chunkspan, indices[1]*chunkspan);
+                ctx.drawImage(buffer, chunk_key[0]*chunkspan, chunk_key[1]*chunkspan);
             }
         });
     }
