@@ -95,10 +95,6 @@ var main = function() {
     function renderChunks() {
         var visible = getVisibleChunks();
         var indices;
-        var dx;
-        var dy;
-        var oddx = null;
-        var oddy = null;
         $.each(visible, function(i, chunk_key) {
             // If the chunk isn't cached, generate it.
             indices = $.map(chunk_key.split(","), function(x) { return parseInt(x); })
@@ -106,13 +102,9 @@ var main = function() {
                 console.log("hit ", chunk_key);
                 chunk_cache[chunk_key] = renderChunk.apply(null, indices);
             }
-            if (oddx === null) { oddx = Math.abs(indices[0] % 2); }
-            if (oddy === null) { oddy = Math.abs(indices[1] % 2); }
             chunkdata = chunk_cache[chunk_key];
             bctx.putImageData(chunkdata, 0, 0);
-            var dx = (i%2)*csx - oddx * csx;
-            var dy = Math.floor(i/2)*csy - oddy * csy;
-            ctx.drawImage(buffer, dx, dy);
+            ctx.drawImage(buffer, indices[0]*csx, indices[1]*csy);
         });
     }
 
@@ -130,7 +122,7 @@ var main = function() {
         if (state.pressed["D"] === true) {
             state.x += scrollmult;
         }
-        ctx.translate(-(state.x%csx), -(state.y%csy));
+        ctx.translate(-state.x, -state.y);
     }
 
     var last = null;
