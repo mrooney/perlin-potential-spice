@@ -52,7 +52,6 @@ onmessage = function(e) {
 
 
     var data = imgData.data;
-
     for (y = 0; y < chunkSpan; y++) {
         for (x = 0; x < chunkSpan; x++) {
             offset = (y * chunkSpan + x) * 4;
@@ -65,6 +64,5 @@ onmessage = function(e) {
     }
 
     console.log("Generated chunk in " + (new Date().getTime() - start));
-
     postMessage({cx: cx, cy: cy, imgData: imgData});
 }

@@ -67,8 +67,8 @@ var main = function() {
         var topleftcx = Math.floor(state.x / chunkspan) - offset;
         var topleftcy = Math.floor(state.y / chunkspan) - offset;
         var visible = [];
-        for (var x=0; x < (xchunks+offset*2); x++) {
-            for (var y=0; y < (xchunks+offset*2); y++) {
+        for (var x=0; x < (xchunks+1+offset*2); x++) {
+            for (var y=0; y < (xchunks+1+offset*2); y++) {
                 visible.push([topleftcx+x, topleftcy+y]);
             }
         }
@@ -77,7 +77,6 @@ var main = function() {
 
     function renderChunks() {
         var visible = getVisibleChunks();
-        var nearby = getVisibleChunks(1);
         // Generate any nearby chunks.
         $.each(visible, function(i, chunk_key) {
             if (chunk_queue[chunk_key] === undefined) {
@@ -85,9 +84,6 @@ var main = function() {
                 chunk_queue[chunk_key] = true;
                 renderChunk(chunk_key[0], chunk_key[1]);
             }
-        });
-        // Render any visible ones.
-        $.each(visible, function(i, chunk_key) {
             chunkdata = chunk_cache[chunk_key];
             if (chunkdata) {
                 // TODO: drawImage can take an Image element, so we can cache that instead and skip the bctx here.
@@ -121,7 +117,6 @@ var main = function() {
             delta = timestamp - last;
         }
         requestAnimationFrame(animate);
-
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.save();
         update(delta);
