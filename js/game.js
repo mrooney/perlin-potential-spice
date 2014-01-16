@@ -19,37 +19,21 @@ var main = function() {
     buffer.height = height * tilesize;
     var bctx = buffer.getContext("2d");
 
+    var last = null;
+    // The higher this value, the less the fps will reflect temporary variations
+    // A value of 1 will only keep the last value
+    var filterStrength = 10;
+    var frameTime = 0, lastLoop = new Date, thisLoop;
+
+
     var state = {
         x: 0,
         y: 0,
         pressed: {},
+        mouse: null,
     }
 
     var wrkr = new Worker('js/worker.js');
-
-    function init() {
-        document.onkeydown = function(e) {
-            var key = String.fromCharCode(e.keyCode);
-            state.pressed[key] = true;
-        }
-
-        document.onkeyup = function(e)
-        {
-            var keyCode = ('which' in e) ? e.which : e.keyCode;
-            var key = String.fromCharCode(keyCode);
-            state.pressed[key] = false;
-        }
-
-        var fpsOut = document.getElementById('fps');
-        setInterval(function(){
-          fpsOut.innerHTML = (1000/frameTime).toFixed(1) + " fps";
-        },1000);
-    }
-
-    var imgdata;
-    function render(delta) {
-        renderChunks();
-    }
 
     function renderChunk(cx, cy) {
         var message = {
@@ -102,6 +86,59 @@ var main = function() {
         });
     }
 
+    function logIfDifferent(log) {
+        if (state.lastLog != log) {
+            console.log(log);
+            state.lastLog = log;
+        }
+    }
+
+    function renderMouseover() {
+        if (state.mouse === null) { return; }
+        var colorBlock = function(mx, my, r, g, b) {
+            var ax = state.x + mx;
+            var ay = state.y + my;
+            var cx = Math.floor(ax / chunkspan);
+            var cy = Math.floor(ay / chunkspan);
+            var rx = ax % chunkspan;
+            var ry = ay % chunkspan;
+            var chunk = chunk_cache[[cx,cy]];
+            bctx.putImageData(chunk, 0, 0);
+            bctx.fillStyle = "rgb("+r+","+g+","+b+")";
+            bctx.fillRect(rx - rx%tilesize, ry - ry%tilesize, tilesize, tilesize);
+            chunk_cache[[cx, cy]] = bctx.getImageData(0,0,chunkspan,chunkspan);
+        }
+        colorBlock(state.mouse.x, state.mouse.y, 255, 0, 0);
+    }
+
+    function init() {
+        document.onkeydown = function(e) {
+            var key = String.fromCharCode(e.keyCode);
+            state.pressed[key] = true;
+        }
+
+        document.onkeyup = function(e)
+        {
+            var keyCode = ('which' in e) ? e.which : e.keyCode;
+            var key = String.fromCharCode(keyCode);
+            state.pressed[key] = false;
+        }
+
+        canvas.addEventListener('mousemove', function(evt) {
+            var rect = canvas.getBoundingClientRect();
+            state.mouse = {
+              x: evt.clientX - rect.left,
+              y: evt.clientY - rect.top,
+            };
+        }, false);
+
+        var fpsOut = document.getElementById('fps');
+        setInterval(function(){
+          fpsOut.innerHTML = (1000/frameTime).toFixed(1) + " fps";
+          //console.log(state.mouse.x + "," + state.mouse.y);
+        },1000);
+    }
+
     function update(delta) {
         var scrollmult = 3;
         if (state.pressed["W"] === true) {
@@ -119,11 +156,10 @@ var main = function() {
         ctx.translate(-state.x, -state.y);
     }
 
-    var last = null;
-    // The higher this value, the less the fps will reflect temporary variations
-    // A value of 1 will only keep the last value
-    var filterStrength = 10;
-    var frameTime = 0, lastLoop = new Date, thisLoop;
+    function render(delta) {
+        renderChunks();
+        renderMouseover();
+    }
 
     function animate(timestamp) {
         var delta = 0;
