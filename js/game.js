@@ -95,6 +95,12 @@ var main = function() {
 
     function renderMouseover() {
         if (state.mouse === null) { return; }
+        var mx = state.mouse.x;
+        var my = state.mouse.y;
+        ctx.fillStyle = "pink";
+        ctx.fillRect(mx - mx % tilesize + state.x, my - my % tilesize + state.y, tilesize, tilesize);
+        return false;
+        //TODO: use this code to perm change a block on click
         var colorBlock = function(mx, my, r, g, b) {
             var ax = state.x + mx;
             var ay = state.y + my;
