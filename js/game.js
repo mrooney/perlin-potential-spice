@@ -99,7 +99,6 @@ var main = function() {
         var my = state.mouse.y;
         ctx.fillStyle = "pink";
         ctx.fillRect(mx - (state.x + mx) % tilesize + state.x, my - (state.y + my) % tilesize + state.y, tilesize, tilesize);
-        colorHoverBlock();
     }
 
     function colorHoverBlock() {
@@ -121,14 +120,13 @@ var main = function() {
         colorBlock(cx, cy, bx, by, 255, 0, 0);
     }
 
-    function init() {
+    var init = function() {
         document.onkeydown = function(e) {
             var key = String.fromCharCode(e.keyCode);
             state.pressed[key] = true;
         }
 
-        document.onkeyup = function(e)
-        {
+        document.onkeyup = function(e) {
             var keyCode = ('which' in e) ? e.which : e.keyCode;
             var key = String.fromCharCode(keyCode);
             state.pressed[key] = false;
@@ -141,6 +139,10 @@ var main = function() {
               y: evt.clientY - rect.top,
             };
         }, false);
+
+        $(canvas).on("click", function() {
+            colorHoverBlock();
+        });
 
         var fpsOut = document.getElementById('fps');
         setInterval(function(){
