@@ -99,22 +99,26 @@ var main = function() {
         var my = state.mouse.y;
         ctx.fillStyle = "pink";
         ctx.fillRect(mx - (state.x + mx) % tilesize + state.x, my - (state.y + my) % tilesize + state.y, tilesize, tilesize);
-        return false;
-        //TODO: use this code to perm change a block on click
-        var colorBlock = function(mx, my, r, g, b) {
-            var ax = state.x + mx;
-            var ay = state.y + my;
-            var cx = Math.floor(ax / chunkspan);
-            var cy = Math.floor(ay / chunkspan);
-            var rx = ax % chunkspan - ax % tilesize;
-            var ry = ay % chunkspan - ay % tilesize;
+        colorHoverBlock();
+    }
+
+    function colorHoverBlock() {
+        var colorBlock = function(cx, cy, bx, by, r, g, b) {
             var chunk = chunk_cache[[cx,cy]];
             bctx.putImageData(chunk, 0, 0);
             bctx.fillStyle = "rgb("+r+","+g+","+b+")";
-            bctx.fillRect(rx, ry, tilesize, tilesize);
+            bctx.fillRect(bx*tilesize, by*tilesize, tilesize, tilesize);
             chunk_cache[[cx, cy]] = bctx.getImageData(0,0,chunkspan,chunkspan);
         }
-        colorBlock(state.mouse.x, state.mouse.y, 255, 0, 0);
+        var ax = state.x + state.mouse.x;
+        var ay = state.y + state.mouse.y;
+        var cx = Math.floor(ax / chunkspan);
+        var cy = Math.floor(ay / chunkspan);
+        var bx = Math.floor((Math.abs(ax) % chunkspan)/tilesize);
+        var by = Math.floor((Math.abs(ay) % chunkspan)/tilesize);
+        if (cx < 0) { bx = chunksize - bx; }
+        if (cy < 0) { by = chunksize - by; }
+        colorBlock(cx, cy, bx, by, 255, 0, 0);
     }
 
     function init() {
