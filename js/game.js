@@ -98,7 +98,7 @@ var main = function() {
         var mx = state.mouse.x;
         var my = state.mouse.y;
         ctx.fillStyle = "pink";
-        ctx.fillRect(mx - mx % tilesize + state.x, my - my % tilesize + state.y, tilesize, tilesize);
+        ctx.fillRect(mx - (state.x + mx) % tilesize + state.x, my - (state.y + my) % tilesize + state.y, tilesize, tilesize);
         return false;
         //TODO: use this code to perm change a block on click
         var colorBlock = function(mx, my, r, g, b) {
@@ -106,12 +106,12 @@ var main = function() {
             var ay = state.y + my;
             var cx = Math.floor(ax / chunkspan);
             var cy = Math.floor(ay / chunkspan);
-            var rx = ax % chunkspan;
-            var ry = ay % chunkspan;
+            var rx = ax % chunkspan - ax % tilesize;
+            var ry = ay % chunkspan - ay % tilesize;
             var chunk = chunk_cache[[cx,cy]];
             bctx.putImageData(chunk, 0, 0);
             bctx.fillStyle = "rgb("+r+","+g+","+b+")";
-            bctx.fillRect(rx - rx%tilesize, ry - ry%tilesize, tilesize, tilesize);
+            bctx.fillRect(rx, ry, tilesize, tilesize);
             chunk_cache[[cx, cy]] = bctx.getImageData(0,0,chunkspan,chunkspan);
         }
         colorBlock(state.mouse.x, state.mouse.y, 255, 0, 0);
