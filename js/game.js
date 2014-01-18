@@ -152,23 +152,16 @@ var main = function() {
     }
 
     var padmap = {
+        // Assume remapping: https://dvcs.w3.org/hg/gamepad/raw-file/default/gamepad.html#remapping.
         rb_down: function(gamepad) {
-            if (gamepad.id.indexOf("(Vendor: 0583 Product: 2060)") !== -1) {
-                if (gamepad.buttons[5]) {
-                    return true;
-                }
+            if (gamepad.buttons[5]) {
+                return true;
             }
         },
         x_pressed: function(gamepad) {
             var pressed = [];
-            $.each(gamepad.buttons, function(i) {
-                pressed.push(gamepad.buttons[i] - state.gamepad.previous_buttons[i]);
-            });
-            if (gamepad.id.indexOf("(Vendor: 0583 Product: 2060)") !== -1) {
-                pressed.splice(5, 1); // remove the rb state, that isn't X
-            }
-            for (var i=0; i<pressed.length; i++) {
-                if (pressed[i] === 1) { return true; }
+            for (var i=0; i<4; i++) {
+                if (gamepad.buttons[i] && !state.gamepad.previous_buttons[i]) { return true; }
             }
         },
     }
