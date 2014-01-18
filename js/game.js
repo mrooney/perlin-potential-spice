@@ -31,12 +31,10 @@ var main = function() {
         pressed: {},
         mouse: {x: canvas.width/2, y: canvas.height/2},
         gamepad: {timestamp: 0, previous_buttons: []},
+        wrkr: null,
     }
-    var gamepad_threshold = 0.5;
 
-    var wrkr = new Worker('js/worker.js');
-
-    function renderChunk(cx, cy) {
+    var renderChunk = function(cx, cy) {
         var message = {
             chunkSize: chunksize,
             tileSize: tilesize,
@@ -44,15 +42,10 @@ var main = function() {
             cy: cy,
             imgData: bctx.getImageData(0, 0, chunkspan, chunkspan),
         }
-        wrkr.postMessage(message);
+        state.wrkr.postMessage(message);
     }
 
-    wrkr.onmessage = function(e) {
-        var key = ""+e.data.cx+","+e.data.cy;
-        chunk_cache[key] = e.data.imgData;
-    }
-
-    function getVisibleChunks(offset) {
+    var getVisibleChunks = function(offset) {
         offset = offset || 0;
         var topleftcx = Math.floor(state.x / chunkspan) - offset;
         var topleftcy = Math.floor(state.y / chunkspan) - offset;
@@ -65,7 +58,7 @@ var main = function() {
         return visible;
     }
 
-    function renderChunks() {
+    var renderChunks = function() {
         var visible = getVisibleChunks();
         var nearby = getVisibleChunks(1);
         // Generate any nearby chunks.
@@ -87,21 +80,21 @@ var main = function() {
         });
     }
 
-    function logIfDifferent(log) {
+    var logIfDifferent = function(log) {
         if (state.lastLog != log) {
             console.log(log);
             state.lastLog = log;
         }
     }
 
-    function renderMouseover() {
+    var renderMouseover = function() {
         var mx = state.mouse.x;
         var my = state.mouse.y;
         ctx.fillStyle = "pink";
         ctx.fillRect(mx - (state.x + mx) % tilesize + state.x, my - (state.y + my) % tilesize + state.y, tilesize, tilesize);
     }
 
-    function colorHoverBlock() {
+    var colorHoverBlock = function() {
         var colorBlock = function(cx, cy, bx, by, r, g, b) {
             var chunk = chunk_cache[[cx,cy]];
             bctx.putImageData(chunk, 0, 0);
@@ -121,6 +114,12 @@ var main = function() {
     }
 
     var init = function() {
+        state.wrkr = new Worker('js/worker.js');
+        state.wrkr.onmessage = function(e) {
+            var key = ""+e.data.cx+","+e.data.cy;
+            chunk_cache[key] = e.data.imgData;
+        }
+
         document.onkeydown = function(e) {
             var key = String.fromCharCode(e.keyCode);
             state.pressed[key] = true;
@@ -165,7 +164,7 @@ var main = function() {
         },
     }
 
-    function update(delta) {
+    var update = function(delta) {
         var scrollmult = 3;
 
         var gamepad = navigator.webkitGetGamepads && navigator.webkitGetGamepads()[0];
@@ -203,12 +202,12 @@ var main = function() {
         ctx.translate(-state.x, -state.y);
     }
 
-    function render(delta) {
+    var render = function(delta) {
         renderChunks();
         renderMouseover();
     }
 
-    function animate(timestamp) {
+    var animate = function(timestamp) {
         var delta = 0;
         if (last !== null) {
             delta = timestamp - last;
