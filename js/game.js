@@ -130,13 +130,13 @@ var main = function() {
         this.lower = function() {
             var height = that.height();
             var lowerStyle = constants.styles[height-1] || constants.styles[0];
-            that.color.apply(null, higherStyle);
+            that.color.apply(null, lowerStyle);
             return that;
         }
 
         return this;
     }
-    var colorHoverBlock = function() {
+    var getHoverBlock = function() {
         var ax = state.x + state.mouse.x;
         var ay = state.y + state.mouse.y;
         var cx = Math.floor(ax / chunkspan);
@@ -145,7 +145,15 @@ var main = function() {
         var by = Math.floor((Math.abs(ay) % chunkspan)/tilesize);
         if (cx < 0) { bx = chunksize - bx; }
         if (cy < 0) { by = chunksize - by; }
-        block(cx, cy, bx, by).raise();
+        return block(cx, cy, bx, by);
+    }
+
+    var raiseHoverBlock = function() {
+        getHoverBlock().raise();
+    }
+
+    var lowerHoverBlock = function() {
+        getHoverBlock().lower();
     }
 
     var init = function() {
@@ -175,7 +183,7 @@ var main = function() {
         }, false);
 
         $(canvas).on("click", function() {
-            colorHoverBlock();
+            raiseHoverBlock();
         });
 
         var fpsOut = document.getElementById('fps');
@@ -191,11 +199,11 @@ var main = function() {
                 return true;
             }
         },
-        x_pressed: function(gamepad) {
-            var pressed = [];
-            for (var i=0; i<4; i++) {
-                if (gamepad.buttons[i] && !state.gamepad.previous_buttons[i]) { return true; }
-            }
+        raise_pressed: function(gamepad) {
+            return gamepad.buttons[2] && !state.gamepad.previous_buttons[2]
+        },
+        lower_pressed: function(gamepad) {
+            return gamepad.buttons[1] && !state.gamepad.previous_buttons[1]
         },
     }
 
@@ -211,8 +219,11 @@ var main = function() {
             state.gamepad.ax = Math.round(gamepad.axes[0]);
             state.gamepad.ay = Math.round(gamepad.axes[1]);
             state.gamepad.rb = padmap.rb_down(gamepad);
-            if (padmap.x_pressed(gamepad)) {
-                colorHoverBlock();
+            if (padmap.raise_pressed(gamepad)) {
+                raiseHoverBlock();
+            }
+            if (padmap.lower_pressed(gamepad)) {
+                lowerHoverBlock();
             }
 
             state.gamepad.timestamp = gamepad.timestamp;
