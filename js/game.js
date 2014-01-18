@@ -29,7 +29,7 @@ var main = function() {
         x: 0,
         y: 0,
         pressed: {},
-        mouse: null,
+        mouse: {x: canvas.width/2, y: canvas.height/2},
         gamepad: {timestamp: 0, previous_buttons: []},
     }
     var gamepad_threshold = 0.5;
@@ -95,7 +95,6 @@ var main = function() {
     }
 
     function renderMouseover() {
-        if (state.mouse === null) { return; }
         var mx = state.mouse.x;
         var my = state.mouse.y;
         ctx.fillStyle = "pink";
@@ -171,6 +170,10 @@ var main = function() {
 
         var gamepad = navigator.webkitGetGamepads && navigator.webkitGetGamepads()[0];
         if (gamepad && gamepad.timestamp > state.gamepad.timestamp) {
+            // If we are using the gamepad, place the cursor in the middle.
+            state.mouse.x = canvas.width/2;
+            state.mouse.y = canvas.height/2;
+
             state.gamepad.ax = Math.round(gamepad.axes[0]);
             state.gamepad.ay = Math.round(gamepad.axes[1]);
             state.gamepad.rb = padmap.rb_down(gamepad);
