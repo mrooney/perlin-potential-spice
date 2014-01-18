@@ -91,17 +91,52 @@ var main = function() {
         var mx = state.mouse.x;
         var my = state.mouse.y;
         ctx.fillStyle = "pink";
-        ctx.fillRect(mx - (state.x + mx) % tilesize + state.x, my - (state.y + my) % tilesize + state.y, tilesize, tilesize);
+        ctx.strokeRect(mx - (state.x + mx) % tilesize + state.x, my - (state.y + my) % tilesize + state.y, tilesize, tilesize);
     }
 
-    var colorHoverBlock = function() {
-        var colorBlock = function(cx, cy, bx, by, r, g, b) {
-            var chunk = chunk_cache[[cx,cy]];
+    var block = function(cx, cy, bx, by) {
+        var chunk = chunk_cache[[cx,cy]];
+        var rx = bx * tilesize;
+        var ry = by * tilesize;
+
+        var that = this;
+        this.color = function(r, g, b) {
             bctx.putImageData(chunk, 0, 0);
             bctx.fillStyle = "rgb("+r+","+g+","+b+")";
-            bctx.fillRect(bx*tilesize, by*tilesize, tilesize, tilesize);
+            bctx.fillRect(rx, ry, tilesize, tilesize);
             chunk_cache[[cx, cy]] = bctx.getImageData(0,0,chunkspan,chunkspan);
+            return that;
         }
+
+        this.height = function(height) {
+            if (height === undefined) {
+                var offset = (ry * chunksize * tilesize + rx) * 4;
+                var r = chunk.data[offset];
+                var g = chunk.data[offset+1];
+                var b = chunk.data[offset+2];
+                var height = constants.heights[[r,g,b]];
+                return height;
+            }
+            return that;
+        }
+
+        this.raise = function() {
+            var height = that.height();
+            var higherStyle = constants.styles[height+1] || constants.styles[constants.styles.length-1];
+            that.color.apply(null, higherStyle);
+            return that;
+        }
+
+        this.lower = function() {
+            var height = that.height();
+            var lowerStyle = constants.styles[height-1] || constants.styles[0];
+            that.color.apply(null, higherStyle);
+            return that;
+        }
+
+        return this;
+    }
+    var colorHoverBlock = function() {
         var ax = state.x + state.mouse.x;
         var ay = state.y + state.mouse.y;
         var cx = Math.floor(ax / chunkspan);
@@ -110,7 +145,7 @@ var main = function() {
         var by = Math.floor((Math.abs(ay) % chunkspan)/tilesize);
         if (cx < 0) { bx = chunksize - bx; }
         if (cy < 0) { by = chunksize - by; }
-        colorBlock(cx, cy, bx, by, 255, 0, 0);
+        block(cx, cy, bx, by).raise();
     }
 
     var init = function() {

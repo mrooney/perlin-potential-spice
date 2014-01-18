@@ -1,6 +1,6 @@
-importScripts("mt.js", "perlin.js");
+importScripts("mt.js", "perlin.js", "const.js");
 
-mt = new MersenneTwister(5853192986);
+mt = new MersenneTwister();
 
 var noiseLevel = function(zoom) {
     var zoom = zoom || 1;
@@ -37,14 +37,14 @@ onmessage = function(e) {
             n3 = high(rx,ry);
             style = [255, 0, 0];
             if (n < .6) { // ocean
-                style = [0, 0, 255];
-                if (n2 > .6) { style = [100, 149, 237]; }
+                style = constants.styles[0];
+                if (n2 > .6) { style = constants.styles[1]; }
             } else if (n < .7) { // sand
-                style = [254, 240, 201];
+                style = constants.styles[2];
                 //if (n2 > .75) { style = '#D2691E'; }
             } else { // grass
-                style = [50, 205, 50];
-                if (n3 > .7) { style = [153, 153, 153]; }
+                style = constants.styles[3];
+                if (n3 > .7) { style = constants.styles[4]; }
             }
             chunkStyles[y*chunkSize+x] = style;
         }
