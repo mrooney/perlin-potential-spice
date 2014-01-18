@@ -63,6 +63,6 @@ onmessage = function(e) {
         }
     }
 
-    console.log("Generated chunk in " + (new Date().getTime() - start));
+    //console.log("Generated chunk in " + (new Date().getTime() - start));
     postMessage({cx: cx, cy: cy, imgData: imgData});
 }

@@ -25,13 +25,14 @@ var main = function() {
     var filterStrength = 10;
     var frameTime = 0, lastLoop = new Date, thisLoop;
 
-
     var state = {
         x: 0,
         y: 0,
         pressed: {},
         mouse: null,
+        gamepad: {timestamp: 0},
     }
+    var gamepad_threshold = 0.5;
 
     var wrkr = new Worker('js/worker.js');
 
@@ -70,7 +71,7 @@ var main = function() {
         // Generate any nearby chunks.
         $.each(nearby, function(i, chunk_key) {
             if (chunk_queue[chunk_key] === undefined) {
-                console.log("generating ", chunk_key);
+                //console.log("generating ", chunk_key);
                 chunk_queue[chunk_key] = true;
                 renderChunk(chunk_key[0], chunk_key[1]);
             }
@@ -147,12 +148,21 @@ var main = function() {
         var fpsOut = document.getElementById('fps');
         setInterval(function(){
           fpsOut.innerHTML = (1000/frameTime).toFixed(1) + " fps";
-          //console.log(state.mouse.x + "," + state.mouse.y);
         },1000);
     }
 
     function update(delta) {
         var scrollmult = 3;
+
+        var gamepad = navigator.webkitGetGamepads && navigator.webkitGetGamepads()[0];
+        if (gamepad && gamepad.timestamp > state.gamepad.timestamp) {
+            state.gamepad.x = Math.round(gamepad.axes[0]);
+            state.gamepad.y = Math.round(gamepad.axes[1]);
+            state.gamepad.timestamp = gamepad.timestamp;
+        }
+        state.x += (state.gamepad.x || 0) * scrollmult;
+        state.y += (state.gamepad.y || 0) * scrollmult;
+
         if (state.pressed["W"] === true) {
             state.y -= scrollmult;
         }
