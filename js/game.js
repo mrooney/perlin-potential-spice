@@ -30,7 +30,7 @@ var main = function() {
         y: 0,
         pressed: {},
         mouse: null,
-        gamepad: {timestamp: 0},
+        gamepad: {timestamp: 0, previous_buttons: []},
     }
     var gamepad_threshold = 0.5;
 
@@ -151,23 +151,46 @@ var main = function() {
         },1000);
     }
 
+    var padmap = {
+        rb_down: function(gamepad) {
+            if (gamepad.id.indexOf("(Vendor: 0583 Product: 2060)") !== -1) {
+                if (gamepad.buttons[5]) {
+                    return true;
+                }
+            }
+        },
+        x_pressed: function(gamepad) {
+            var pressed = [];
+            $.each(gamepad.buttons, function(i) {
+                pressed.push(gamepad.buttons[i] - state.gamepad.previous_buttons[i]);
+            });
+            if (gamepad.id.indexOf("(Vendor: 0583 Product: 2060)") !== -1) {
+                pressed.splice(5, 1); // remove the rb state, that isn't X
+            }
+            for (var i=0; i<pressed.length; i++) {
+                if (pressed[i] === 1) { return true; }
+            }
+        },
+    }
+
     function update(delta) {
         var scrollmult = 3;
 
         var gamepad = navigator.webkitGetGamepads && navigator.webkitGetGamepads()[0];
         if (gamepad && gamepad.timestamp > state.gamepad.timestamp) {
-            state.gamepad.x = Math.round(gamepad.axes[0]);
-            state.gamepad.y = Math.round(gamepad.axes[1]);
+            state.gamepad.ax = Math.round(gamepad.axes[0]);
+            state.gamepad.ay = Math.round(gamepad.axes[1]);
+            state.gamepad.rb = padmap.rb_down(gamepad);
+            if (padmap.x_pressed(gamepad)) {
+                colorHoverBlock();
+            }
+
             state.gamepad.timestamp = gamepad.timestamp;
-            $.each(gamepad.buttons, function(i, value) {
-                if (value > gamepad_threshold) {
-                    colorHoverBlock();
-                    return false;
-                }
-            });
+            state.gamepad.previous_buttons = gamepad.buttons.slice(0);
         }
-        state.x += (state.gamepad.x || 0) * scrollmult;
-        state.y += (state.gamepad.y || 0) * scrollmult;
+        if (state.gamepad.rb) { scrollmult *= 2; }
+        state.x += (state.gamepad.ax || 0) * scrollmult;
+        state.y += (state.gamepad.ay || 0) * scrollmult;
 
         if (state.pressed["W"] === true) {
             state.y -= scrollmult;
