@@ -159,6 +159,12 @@ var main = function() {
             state.gamepad.x = Math.round(gamepad.axes[0]);
             state.gamepad.y = Math.round(gamepad.axes[1]);
             state.gamepad.timestamp = gamepad.timestamp;
+            $.each(gamepad.buttons, function(i, value) {
+                if (value > gamepad_threshold) {
+                    colorHoverBlock();
+                    return false;
+                }
+            });
         }
         state.x += (state.gamepad.x || 0) * scrollmult;
         state.y += (state.gamepad.y || 0) * scrollmult;
