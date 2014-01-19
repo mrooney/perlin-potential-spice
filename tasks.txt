@@ -1,4 +1,4 @@
 * make sure it at least warns instead of errors without web workers
     * it could really just synchronously generate blocks, is there a shim?
 * test gamepad in Firefox, probably change webkitGetgamepads call
-* put a note suggesting gamepad use, press a key, show status
+* a controls widget incl a note suggesting gamepad use, press a key, show status
