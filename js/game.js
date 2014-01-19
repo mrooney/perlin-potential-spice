@@ -213,8 +213,12 @@ var main = function() {
             };
         }, false);
 
-        $(canvas).on("click", function() {
-            raiseHoverBlock();
+        $(canvas).on("click", function(e) {
+            if (e.shiftKey) {
+                lowerHoverBlock();
+            } else {
+                raiseHoverBlock();
+            }
         });
 
         var fpsOut = document.getElementById('fps');
