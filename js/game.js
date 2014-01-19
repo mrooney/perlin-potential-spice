@@ -135,16 +135,8 @@ var main = function() {
             return nabes;
         }
 
-        this.noise = function() {
-            var rx = cx * chunksize + bx;
-            var ry = cy * chunksize + by;
-            var l = constants.low(rx,ry) + constants.high(rx,ry) * .1;
-            var m = constants.mid(rx,ry);
-            var h = constants.high(rx,ry);
-            return [l, m, h];
-        }
-
-        this.height = function(delta, decline) {
+        this.height = function(delta, recurse) {
+            var recurse = recurse === undefined ? true : false;
             var chunk = chunk_cache[[cx, cy]];
             if (delta === undefined) {
                 var offset = (ry * chunksize * tilesize + rx) * 4;
@@ -152,33 +144,24 @@ var main = function() {
                 var g = chunk.data[offset+1];
                 var b = chunk.data[offset+2];
                 var height = constants.heights[[r,g,b]];
-                if (height === undefined) { console.log("NULLHEIGHT " + [r,g,b].join()); }
                 return height;
             } else {
                 var current = self.height();
                 var newheight = clamp(current + delta, 0, constants.styles.length-1);
-                var newstyle;
-                //if (newheight != current) {
-                    if (self.noise()[2] > 0.7 && constants.variants[newheight]) {
-                        newstyle = constants.variants[newheight];
-                    } else {
-                        newstyle = constants.styles[newheight];
-                    }
-                    if (!newstyle) { console.log(current); }
+                if (newheight != current) {
+                    var newstyle = constants.styles[newheight];
                     self.color.apply(null, newstyle);
-                    $.each(self.neighbors(), function(i, nabe) {
-                        var nabeheight = nabe.height();
-                        if (!decline) {
-                            nabe.height(newheight - nabeheight, true);
-                        } else {
+                    if (recurse) {
+                        $.each(self.neighbors(), function(i, nabe) {
+                            var nabeheight = nabe.height();
                             var nabediff = newheight - nabeheight;
                             if (Math.abs(nabediff) > 1) {
                                 var delta = nabediff > 0 ? nabediff - 1 : nabediff + 1;
-                                nabe.height(delta, true);
+                                nabe.height(delta);
                             }
-                        }
-                    });
-                //}
+                        });
+                    }
+                }
             }
             return self;
         }
