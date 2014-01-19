@@ -1,3 +1,6 @@
+var mod = function(m, n) { return ((m%n)+n)%n; }
+var clamp = function(x, min, max) { return Math.max(min, Math.min(x, max)); }
+
 var main = function() {
     var height = 80;
     var width = 150;
@@ -94,44 +97,72 @@ var main = function() {
         ctx.strokeRect(mx - (state.x + mx) % tilesize + state.x, my - (state.y + my) % tilesize + state.y, tilesize, tilesize);
     }
 
-    var block = function(cx, cy, bx, by) {
-        var chunk = chunk_cache[[cx,cy]];
+    var Block = function(cx, cy, bx, by) {
+        var self = this;
         var rx = bx * tilesize;
         var ry = by * tilesize;
 
-        var that = this;
         this.color = function(r, g, b) {
-            bctx.putImageData(chunk, 0, 0);
+            bctx.putImageData(chunk_cache[[cx, cy]], 0, 0);
             bctx.fillStyle = "rgb("+r+","+g+","+b+")";
             bctx.fillRect(rx, ry, tilesize, tilesize);
             chunk_cache[[cx, cy]] = bctx.getImageData(0,0,chunkspan,chunkspan);
-            return that;
+            return self;
         }
 
-        this.height = function(height) {
-            if (height === undefined) {
+        this.neighbors = function() {
+            var nabes = [];
+            $.each([[-1,0],[1,0],[0,-1],[0,1]], function(i, os) {
+                var ox = os[0];
+                var oy = os[1];
+                var nbx = bx + ox;
+                var nby = by + oy;
+                var ncx = cx;
+                var ncy = cy;
+                if (nbx < 0) { ncx -= 1; }
+                if (nbx >= chunksize) { ncx += 1; }
+                if (nby < 0) { ncy -= 1; }
+                if (nby >= chunksize) { ncy += 1; }
+                nbx = mod(nbx, chunksize);
+                nby = mod(nby, chunksize);
+                nabes.push(new Block(ncx, ncy, nbx, nby));
+            })
+            return nabes;
+        }
+
+        this.height = function(delta, recurse) {
+            var recurse = recurse === undefined ? true : false;
+            var chunk = chunk_cache[[cx, cy]];
+            if (delta === undefined) {
                 var offset = (ry * chunksize * tilesize + rx) * 4;
                 var r = chunk.data[offset];
                 var g = chunk.data[offset+1];
                 var b = chunk.data[offset+2];
                 var height = constants.heights[[r,g,b]];
                 return height;
+            } else {
+                var current = self.height();
+                var newheight = clamp(current + delta, 0, constants.styles.length-1);
+                if (newheight != current) {
+                    var newstyle = constants.styles[newheight];
+                    self.color.apply(null, newstyle);
+                    if (recurse) {
+                        $.each(self.neighbors(), function(i, nabe) {
+                            var nabeheight = nabe.height();
+                            var nabediff = newheight - nabeheight;
+                            if (Math.abs(nabediff) > 1) {
+                                var delta = nabediff > 0 ? nabediff - 1 : nabediff + 1;
+                                nabe.height(delta);
+                            }
+                        });
+                    }
+                }
             }
-            return that;
+            return self;
         }
 
-        this.raise = function() {
-            var height = that.height();
-            var higherStyle = constants.styles[height+1] || constants.styles[constants.styles.length-1];
-            that.color.apply(null, higherStyle);
-            return that;
-        }
-
-        this.lower = function() {
-            var height = that.height();
-            var lowerStyle = constants.styles[height-1] || constants.styles[0];
-            that.color.apply(null, lowerStyle);
-            return that;
+        this.str = function() {
+            return [cx, cy, bx, by].join();
         }
 
         return this;
@@ -145,15 +176,15 @@ var main = function() {
         var by = Math.floor((Math.abs(ay) % chunkspan)/tilesize);
         if (cx < 0) { bx = chunksize - bx; }
         if (cy < 0) { by = chunksize - by; }
-        return block(cx, cy, bx, by);
+        return new Block(cx, cy, bx, by);
     }
 
     var raiseHoverBlock = function() {
-        getHoverBlock().raise();
+        getHoverBlock().height(1);
     }
 
     var lowerHoverBlock = function() {
-        getHoverBlock().lower();
+        getHoverBlock().height(-1);
     }
 
     var init = function() {
