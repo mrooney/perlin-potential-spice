@@ -103,10 +103,15 @@ var main = function() {
         var ry = by * tilesize;
 
         this.color = function(r, g, b) {
-            bctx.putImageData(chunk_cache[[cx, cy]], 0, 0);
-            bctx.fillStyle = "rgb("+r+","+g+","+b+")";
-            bctx.fillRect(rx, ry, tilesize, tilesize);
-            chunk_cache[[cx, cy]] = bctx.getImageData(0,0,chunkspan,chunkspan);
+            var chunk = chunk_cache[[cx, cy]];
+            for (var x=rx; x<rx+tilesize; x++) {
+                for (var y=ry; y<ry+tilesize; y++) {
+                    var offset = (y * chunksize * tilesize + x) * 4;
+                    chunk.data[offset] = r;
+                    chunk.data[offset+1] = g;
+                    chunk.data[offset+2] = b;
+                }
+            }
             return self;
         }
 
