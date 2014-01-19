@@ -230,15 +230,13 @@ var main = function() {
     var padmap = {
         // Assume remapping: https://dvcs.w3.org/hg/gamepad/raw-file/default/gamepad.html#remapping.
         rb_down: function(gamepad) {
-            if (gamepad.buttons[5]) {
-                return true;
-            }
+            return gamepad.buttons[5];
         },
-        raise_pressed: function(gamepad) {
-            return gamepad.buttons[2] && !state.gamepad.previous_buttons[2]
+        raise_down: function(gamepad) {
+            return gamepad.buttons[2];
         },
-        lower_pressed: function(gamepad) {
-            return gamepad.buttons[1] && !state.gamepad.previous_buttons[1]
+        lower_down: function(gamepad) {
+            return gamepad.buttons[1];
         },
     }
 
@@ -254,17 +252,16 @@ var main = function() {
             state.gamepad.ax = Math.round(gamepad.axes[0]);
             state.gamepad.ay = Math.round(gamepad.axes[1]);
             state.gamepad.rb = padmap.rb_down(gamepad);
-            if (padmap.raise_pressed(gamepad)) {
-                raiseHoverBlock();
-            }
-            if (padmap.lower_pressed(gamepad)) {
-                lowerHoverBlock();
-            }
+            state.gamepad.raising = padmap.raise_down(gamepad);
+            state.gamepad.lowering = padmap.lower_down(gamepad);
 
             state.gamepad.timestamp = gamepad.timestamp;
             state.gamepad.previous_buttons = gamepad.buttons.slice(0);
         }
         if (state.gamepad.rb) { scrollmult *= 2; }
+        if (state.gamepad.raising) { raiseHoverBlock(); }
+        if (state.gamepad.lowering) { lowerHoverBlock(); }
+
         state.x += (state.gamepad.ax || 0) * scrollmult;
         state.y += (state.gamepad.ay || 0) * scrollmult;
 
