@@ -15,6 +15,9 @@ var low = noiseLevel(25);
 var mid = noiseLevel(5);
 var high = noiseLevel(3);
 
+var thresh = [mt.next(), mt.next(), mt.next(), mt.next(), mt.next(), mt.next()];
+thresh.sort(function (a, b) { return a-b; });
+
 onmessage = function(e) {
     var chunkSize = e.data.chunkSize;
     var tileSize = e.data.tileSize;
@@ -24,7 +27,7 @@ onmessage = function(e) {
 
     var chunkSpan = chunkSize * tileSize;
     var chunkStyles = new Array(chunkSize*chunkSize);
-    var x, y, style, rx, ry, n, n2, n3, rgb, offset, cindex;
+    var x, y, height, style, rx, ry, n, n2, n3, rgb, offset, cindex;
 
     var start = new Date().getTime();
 
@@ -36,16 +39,23 @@ onmessage = function(e) {
             n2 = mid(rx,ry);
             n3 = high(rx,ry);
             style = [255, 0, 0];
-            if (n < .6) { // ocean
-                style = constants.styles[0];
-                if (n2 > .6) { style = constants.styles[1]; }
-            } else if (n < .7) { // sand
-                style = constants.styles[2];
-                //if (n2 > .75) { style = '#D2691E'; }
-            } else { // grass
-                style = constants.styles[3];
-                if (n3 > .7) { style = constants.styles[4]; }
+
+            if (n < thresh[2]) {
+                height = 0;
+            } else if (n < thresh[3]) {
+                height = 1;
+            } else if (n < thresh[4]) {
+                height = 2;
+            } else {
+                height = 3;
             }
+
+            if (n2 < thresh[3]) {
+                style = constants.styles[height];
+            } else {
+                style = constants.variants[height];
+            }
+
             chunkStyles[y*chunkSize+x] = style;
         }
     }
