@@ -4,22 +4,19 @@ var clamp = function(x, min, max) { return Math.max(min, Math.min(x, max)); }
 var main = function() {
     var height = 80;
     var width = 150;
-    var tilesize = 8;
     var canvas = document.getElementById("canvas");
-    canvas.width = width * tilesize;
-    canvas.height = height * tilesize;
+    canvas.width = width * constants.tilesize;
+    canvas.height = height * constants.tilesize;
     var ctx = canvas.getContext("2d");
 
-    var chunksize = 75;
-    var chunkspan = tilesize * chunksize;
-    var xchunks = Math.ceil(canvas.width / chunkspan);
-    var ychunks = Math.ceil(canvas.height / chunkspan);
+    var xchunks = Math.ceil(canvas.width / constants.chunkspan);
+    var ychunks = Math.ceil(canvas.height / constants.chunkspan);
     var chunk_queue = {};
     var chunk_cache = {};
 
     var buffer = document.createElement("canvas");
-    buffer.width = width * tilesize;
-    buffer.height = height * tilesize;
+    buffer.width = width * constants.tilesize;
+    buffer.height = height * constants.tilesize;
     var bctx = buffer.getContext("2d");
 
     var last = null;
@@ -39,19 +36,17 @@ var main = function() {
 
     var renderChunk = function(cx, cy) {
         var message = {
-            chunkSize: chunksize,
-            tileSize: tilesize,
             cx: cx,
             cy: cy,
-            imgData: bctx.getImageData(0, 0, chunkspan, chunkspan),
+            imgData: bctx.getImageData(0, 0, constants.chunkspan, constants.chunkspan),
         }
         state.wrkr.postMessage(message);
     }
 
     var getVisibleChunks = function(offset) {
         offset = offset || 0;
-        var topleftcx = Math.floor(state.x / chunkspan) - offset;
-        var topleftcy = Math.floor(state.y / chunkspan) - offset;
+        var topleftcx = Math.floor(state.x / constants.chunkspan) - offset;
+        var topleftcy = Math.floor(state.y / constants.chunkspan) - offset;
         var visible = [];
         for (var x=0; x < (xchunks+1+offset*2); x++) {
             for (var y=0; y < (xchunks+1+offset*2); y++) {
@@ -78,7 +73,7 @@ var main = function() {
                 // TODO: drawImage can take an Image element, so we can cache that instead and skip the expensive bctx.putImageData here.
                 // http://stackoverflow.com/questions/923885/capture-html-canvas-as-gif-jpg-png-pdf/
                 bctx.putImageData(chunkdata, 0, 0);
-                ctx.drawImage(buffer, chunk_key[0]*chunkspan, chunk_key[1]*chunkspan);
+                ctx.drawImage(buffer, chunk_key[0]*constants.chunkspan, chunk_key[1]*constants.chunkspan);
             }
         });
     }
@@ -94,19 +89,19 @@ var main = function() {
         var mx = state.mouse.x;
         var my = state.mouse.y;
         ctx.fillStyle = "pink";
-        ctx.strokeRect(mx - (state.x + mx) % tilesize + state.x, my - (state.y + my) % tilesize + state.y, tilesize, tilesize);
+        ctx.strokeRect(mx - (state.x + mx) % constants.tilesize + state.x, my - (state.y + my) % constants.tilesize + state.y, constants.tilesize, constants.tilesize);
     }
 
     var Block = function(cx, cy, bx, by) {
         var self = this;
-        var rx = bx * tilesize;
-        var ry = by * tilesize;
+        var rx = bx * constants.tilesize;
+        var ry = by * constants.tilesize;
 
         this.color = function(r, g, b) {
             var chunk = chunk_cache[[cx, cy]];
-            for (var x=rx; x<rx+tilesize; x++) {
-                for (var y=ry; y<ry+tilesize; y++) {
-                    var offset = (y * chunksize * tilesize + x) * 4;
+            for (var x=rx; x<rx+constants.tilesize; x++) {
+                for (var y=ry; y<ry+constants.tilesize; y++) {
+                    var offset = (y * constants.chunksize * constants.tilesize + x) * 4;
                     chunk.data[offset] = r;
                     chunk.data[offset+1] = g;
                     chunk.data[offset+2] = b;
@@ -125,11 +120,11 @@ var main = function() {
                 var ncx = cx;
                 var ncy = cy;
                 if (nbx < 0) { ncx -= 1; }
-                if (nbx >= chunksize) { ncx += 1; }
+                if (nbx >= constants.chunksize) { ncx += 1; }
                 if (nby < 0) { ncy -= 1; }
-                if (nby >= chunksize) { ncy += 1; }
-                nbx = mod(nbx, chunksize);
-                nby = mod(nby, chunksize);
+                if (nby >= constants.chunksize) { ncy += 1; }
+                nbx = mod(nbx, constants.chunksize);
+                nby = mod(nby, constants.chunksize);
                 nabes.push(new Block(ncx, ncy, nbx, nby));
             })
             return nabes;
@@ -139,7 +134,7 @@ var main = function() {
             var recurse = recurse === undefined ? true : false;
             var chunk = chunk_cache[[cx, cy]];
             if (delta === undefined) {
-                var offset = (ry * chunksize * tilesize + rx) * 4;
+                var offset = (ry * constants.chunksize * constants.tilesize + rx) * 4;
                 var r = chunk.data[offset];
                 var g = chunk.data[offset+1];
                 var b = chunk.data[offset+2];
@@ -149,7 +144,7 @@ var main = function() {
                 var current = self.height();
                 var newheight = clamp(current + delta, 0, constants.styles.length-1);
                 if (newheight != current) {
-                    var newstyle = constants.styles[newheight];
+                    var newstyle = constants.get_block_variant(cx, cy, bx, by)[newheight];
                     self.color.apply(null, newstyle);
                     if (recurse) {
                         $.each(self.neighbors(), function(i, nabe) {
@@ -175,12 +170,12 @@ var main = function() {
     var getHoverBlock = function() {
         var ax = state.x + state.mouse.x;
         var ay = state.y + state.mouse.y;
-        var cx = Math.floor(ax / chunkspan);
-        var cy = Math.floor(ay / chunkspan);
-        var bx = Math.floor((Math.abs(ax) % chunkspan)/tilesize);
-        var by = Math.floor((Math.abs(ay) % chunkspan)/tilesize);
-        if (cx < 0) { bx = chunksize - bx; }
-        if (cy < 0) { by = chunksize - by; }
+        var cx = Math.floor(ax / constants.chunkspan);
+        var cy = Math.floor(ay / constants.chunkspan);
+        var bx = Math.floor((Math.abs(ax) % constants.chunkspan)/constants.tilesize);
+        var by = Math.floor((Math.abs(ay) % constants.chunkspan)/constants.tilesize);
+        if (cx < 0) { bx = constants.chunksize - bx; }
+        if (cy < 0) { by = constants.chunksize - by; }
         return new Block(cx, cy, bx, by);
     }
 
