@@ -54,7 +54,6 @@ constants.get_block_style = function(cx, cy, bx, by) {
     var rx = cx * constants.chunksize + bx;
     var ry = cy * constants.chunksize + by;
     var n = low(rx,ry) + high(rx,ry) * .1;
-    var style = [255, 0, 0];
     var height;
 
     if (n < thresh[2]) {
@@ -66,8 +65,6 @@ constants.get_block_style = function(cx, cy, bx, by) {
     } else {
         height = 3;
     }
-
-    style = constants.get_block_variant(cx, cy, bx, by)[height];
-    return style;
+    return constants.get_block_variant(cx, cy, bx, by)[height];
 }
 
